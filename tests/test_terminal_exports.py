@@ -91,7 +91,7 @@ class TerminalTests(unittest.TestCase):
     def test_new_search_wizard_displays_provider_results(self):
         with tempfile.TemporaryDirectory() as tmp:
             previous = Path.cwd()
-            answers = ["Empresa teste", "Anápolis", "example.com", "", "2", "http://localhost:8080", "1", "2", "", "0", "0"]
+            answers = ["1", "Empresa teste", "Anápolis", "example.com", "", "2", "http://localhost:8080", "1", "2", "", "0", "0"]
             try:
                 os.chdir(tmp)
                 with patch("builtins.input", side_effect=answers), patch("abyss.search", return_value=[{"title": "Resultado do provedor", "url": "https://example.com/case", "snippet": "Evidência de projeto"}]) as search, contextlib.redirect_stdout(io.StringIO()) as output:
