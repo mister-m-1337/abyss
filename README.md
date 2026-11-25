@@ -10,7 +10,7 @@ Ferramenta Python de OSINT comercial da Polypus IT Solutions. Organiza buscas so
 
 **[Tutorial completo de instalação, configuração e atualização](docs/INSTALACAO.md)** — Windows, macOS e Linux.
 
-## Versão 0.4.0
+## Versão 0.4.1
 
 - **Instalador único por plataforma**, com Python e certificados incluídos, instalação por usuário e lançador. Não exige Python/Git separados.
 - Configuração guiada do buscador, com chave Brave somente na sessão; atualização do executável por pacote oficial e SHA-256.
@@ -139,7 +139,7 @@ Testes de provedores usam respostas simuladas. Uma execução manual demonstra e
 
 ## Desenvolvimento previsto
 
-Leitura de páginas públicas e PDFs, rastreamento limitado a domínios selecionados, coleta de canais institucionais publicados, correlação de entidades, revisão de conflitos entre fontes e monitoramento periódico. Esses recursos ainda não estão implementados na versão 0.4.0.
+Leitura de páginas públicas e PDFs, rastreamento limitado a domínios selecionados, coleta de canais institucionais publicados, correlação de entidades, revisão de conflitos entre fontes e monitoramento periódico. Esses recursos ainda não estão implementados na versão 0.4.1.
 
 ## Uso e contribuições
 

@@ -15,7 +15,7 @@ from urllib.request import Request, build_opener, HTTPRedirectHandler, HTTPSHand
 from abyss_discovery import build_plan, assess_sources
 from abyss_network import tls_context
 
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 
 def now():
     return datetime.now(timezone.utc).isoformat()

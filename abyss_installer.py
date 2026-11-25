@@ -70,7 +70,7 @@ def write_launchers(root, executable, desktop=False):
         while shortcut.exists():
             shortcut = desktop_folder / f"ABYSS-{counter}{launcher.suffix}"
             counter += 1
-        shortcut_text = ('@echo off\ncall "' + str(launcher).replace('%', '%%') + '"\n') if sys.platform == "win32" else text
+        shortcut_text = ('@echo off\ncall "' + str(launcher).replace('%', '%%') + '"\n') if sys.platform == "win32" else ("#!/bin/sh\nexec " + shlex.quote(str(launcher)) + "\n")
         with shortcut.open("x", encoding="utf-8") as f:
             f.write(shortcut_text)
         shortcut.chmod(0o700)
@@ -159,6 +159,7 @@ def setup(version, destination=None, guided=False, desktop=False, run=None):
     print(f"Instalado em: {result['root']}\nLançador: {result['launcher']}")
     if guided:
         os.chdir(result["root"])
+        os.environ["ABYSS_CONFIG_DIR"] = result["root"]
         if input("Configurar buscador agora? s/N: ").strip().lower() == "s":
             from abyss_config import configure
             configure(root=Path(result["root"]))

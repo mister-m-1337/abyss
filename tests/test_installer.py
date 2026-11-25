@@ -13,6 +13,20 @@ import abyss_installer as installer
 
 
 class InstallerTests(unittest.TestCase):
+    def test_desktop_launcher_follows_version_switch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            (home / "Desktop").mkdir(parents=True)
+            root = home / "ABYSS install"
+            root.mkdir()
+            with patch("abyss_installer.Path.home", return_value=home):
+                launcher, shortcut = installer.write_launchers(root, root / "versions/v0.4.0/ABYSS", desktop=True)
+                old_shortcut = shortcut.read_text()
+                installer.write_launchers(root, root / "versions/v0.4.1/ABYSS")
+            self.assertNotIn("v0.4.0", old_shortcut)
+            self.assertIn("v0.4.1", launcher.read_text())
+            self.assertEqual(shortcut.read_text(), old_shortcut)
+
     def test_assets_for_supported_platforms(self):
         self.assertEqual(installer.platform_asset("Windows", "AMD64"), "ABYSS-Setup-windows-x64.exe")
         self.assertEqual(installer.platform_asset("Darwin", "arm64"), "ABYSS-Setup-macos-arm64")

@@ -8,6 +8,8 @@ from urllib.parse import urlsplit
 
 def config_root():
     from abyss_installer import default_root, installed_root
+    if os.environ.get("ABYSS_CONFIG_DIR"):
+        return Path(os.environ["ABYSS_CONFIG_DIR"])
     return installed_root() or default_root()
 
 
