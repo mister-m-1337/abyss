@@ -4,7 +4,7 @@
 
 Ferramenta Python de OSINT comercial da Polypus IT Solutions. Organiza buscas sobre empresas e unidades, preserva fontes e exporta evidências para revisão humana. Não envia mensagens, propostas, candidaturas ou formulários.
 
-## Versão 0.1.0
+## Versão 0.2.0
 
 - Plano de pesquisa em nove dimensões: institucional, decisores, compras, tecnologia, projetos, pessoas, vagas, documentos e notícias.
 - Localidade, aliases e múltiplos domínios oficiais informados pelo operador.
@@ -14,12 +14,22 @@ Ferramenta Python de OSINT comercial da Polypus IT Solutions. Organiza buscas so
 - Deduplicação por URL mantendo diferentes trechos e consultas de origem.
 - JSON, CSV, relatório TXT, links de pesquisa e hashes SHA-256 dos arquivos exportados.
 - Falhas de provedores registradas; interrompe o lote quando ocorre erro, preservando resultados anteriores.
+- Interface leve no terminal: nova pesquisa, abrir pesquisa salva, paginação, filtros, detalhes e auditoria de consultas.
+- Exportação PDF paginada e Excel `.xlsx` com abas Resumo, Fontes, Consultas e Plano.
 
-Esta versão coleta resultados e trechos dos buscadores; **não faz leitura integral automática das páginas ou PDFs, nem confirma cargos atuais**. Não extrai contatos de áreas autenticadas, não infere e-mails e não verifica autoridade de contratação. Referências importadas continuam identificadas como importação. Não depende de IA e não promete cobertura exaustiva.
+Esta versão coleta resultados e trechos dos buscadores; **não faz leitura integral automática das páginas ou PDFs de origem, nem confirma cargos atuais**. Não extrai contatos de áreas autenticadas, não infere e-mails e não verifica autoridade de contratação. Referências importadas continuam identificadas como importação. Não depende de IA e não promete cobertura exaustiva.
 
 ## Executar sem instalação
 
 Requer Python 3.10 ou superior. Usa somente a biblioteca padrão.
+
+```bash
+python3 abyss.py --ui
+```
+
+Executar `python3 abyss.py` em um terminal interativo também abre o menu. Use `Nova pesquisa` para escolher alvo, unidade, domínios, aliases e provedor. Ao concluir, a interface mostra as fontes e permite filtrar, consultar detalhes e exportar. No modo manual sem importação, há apenas um plano, sem resultados coletados. `Abrir pesquisa salva` recebe a pasta ou o caminho de `research.json`.
+
+Os parâmetros de linha de comando continuam disponíveis:
 
 ```bash
 python3 abyss.py --company "Empresa Exemplo" --location "Anápolis GO" --domain example.com
@@ -33,6 +43,18 @@ python3 abyss.py --company "Empresa Exemplo" --domain example.com \
 ```
 
 O exemplo é fictício. Uma referência possui `title`, `url`, `snippet`, `category`, `query` e, opcionalmente, `published_date`. Consulte `examples/reference.json`.
+
+## Exportar PDF e Excel
+
+Pelo menu de resultados, escolha PDF, Excel ou ambos. Também é possível exportar sem abrir o menu:
+
+```bash
+python3 abyss.py --open output/demonstracao --export pdf xlsx
+```
+
+Para exportar ao final de uma pesquisa, acrescente `--export pdf xlsx` ao comando de busca. Cada exportação cria uma subpasta `export-*`, preservando arquivos anteriores, pesquisa JSON e seu manifesto. Um novo manifesto associa os relatórios ao hash do JSON original.
+
+Excel usa o formato atual `.xlsx`, e não o binário legado `.xls`. Há cabeçalhos congelados, filtros e células de texto para impedir que trechos sejam interpretados como fórmulas. Células acima de 32.767 caracteres são truncadas apenas no Excel; o JSON preserva o conteúdo completo. O PDF A4 inclui evidências, URLs, origem, datas, erros e plano de pesquisa; sua fonte padrão suporta português/WinAnsi. Para outros alfabetos e símbolos, use Excel ou JSON, que preservam Unicode. Nenhum exportador exige instalação adicional.
 
 ## Busca automática
 
@@ -70,7 +92,7 @@ Testes de provedores usam respostas simuladas. Uma execução manual demonstra e
 
 ## Desenvolvimento previsto
 
-Leitura de páginas públicas e PDFs, rastreamento limitado a domínios selecionados, coleta de canais institucionais publicados, correlação de entidades, revisão de conflitos entre fontes e monitoramento incremental. Esses recursos ainda não estão implementados na versão 0.1.0.
+Leitura de páginas públicas e PDFs, rastreamento limitado a domínios selecionados, coleta de canais institucionais publicados, correlação de entidades, revisão de conflitos entre fontes e monitoramento incremental. Esses recursos ainda não estão implementados na versão 0.2.0.
 
 ## Uso e contribuições
 

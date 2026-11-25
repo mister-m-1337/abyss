@@ -15,7 +15,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 DIMENSIONS = {
     "institucional": ["história unidades endereço telefone", "relatório anual resultados", "CNPJ razão social", "diretoria governança"],
     "decisores": ["gerente engenharia manutenção", "coordenador automação industrial", "gerente infraestrutura TI", "segurança informação liderança"],
@@ -207,7 +207,10 @@ def save(output, target, plan, items, events, mode):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="ABYSS — inteligência de fontes abertas, somente leitura")
     parser.add_argument("--version", action="version", version=VERSION)
-    parser.add_argument("--company", required=True)
+    parser.add_argument("--company")
+    parser.add_argument("--ui", action="store_true", help="Abrir interface interativa no terminal")
+    parser.add_argument("--open", type=Path, help="Abrir uma pesquisa salva (pasta ou research.json)")
+    parser.add_argument("--export", nargs="+", choices=["pdf", "xlsx"], help="Exportar relatório PDF e/ou Excel")
     parser.add_argument("--location", default="")
     parser.add_argument("--domain", action="append", default=[])
     parser.add_argument("--alias", action="append", default=[])
@@ -218,7 +221,28 @@ def main(argv=None):
     parser.add_argument("--delay", type=float, default=2.0)
     parser.add_argument("--import-json", type=Path, help="Lista de resultados com title, url, snippet, category e query")
     parser.add_argument("--output", type=Path)
-    args = parser.parse_args(argv)
+    arguments = sys.argv[1:] if argv is None else argv
+    args = parser.parse_args(arguments)
+    if args.ui or (not arguments and sys.stdin.isatty()):
+        from abyss_terminal import run_terminal
+        return run_terminal(main, VERSION, args.open)
+    if args.open:
+        if args.export:
+            from abyss_exports import export_research
+            try:
+                files = export_research(args.open, args.export)
+                print(json.dumps({"exports": [str(f.resolve()) for f in files]}, ensure_ascii=False))
+                return 0
+            except (ValueError, OSError) as exc:
+                print(f"Exportação falhou: {type(exc).__name__}. Confira a pesquisa e o acesso à pasta.", file=sys.stderr)
+                return 2
+        from abyss_terminal import run_terminal
+        return run_terminal(main, VERSION, args.open)
+    if not args.company:
+        if not arguments:
+            parser.print_help()
+            return 0
+        parser.error("Informe --company, --ui ou --open")
     if not args.company.strip() or not 1 <= args.max_queries <= 1000 or not 1 <= args.count <= 20 or not 1 <= args.delay <= 60:
         parser.error("Empresa obrigatória; max-queries 1–1000; count 1–20; delay 1–60 segundos")
     if args.provider == "brave" and not os.environ.get("BRAVE_API_KEY"):
@@ -257,13 +281,19 @@ def main(argv=None):
                     # Não serializa corpo, URL de erro ou headers: podem conter credenciais.
                     event.update(status="error", error=f"{type(exc).__name__}; conferir configuração/provedor")
                 events.append(event)
-                print(f"{index + 1}: {q['category']} — {event['status']}", file=sys.stderr)
+                print(f"{index + 1}: {q['category']} — {event['status']} | {event.get('returned', 0)} resultados | {len(items)} fontes únicas", file=sys.stderr)
                 if event["status"] == "error":
                     break
         target = {"company": args.company, "location": args.location, "official_domains": domains, "aliases": args.alias}
         save(output, target, plan, items, events, args.provider)
+        if args.export:
+            from abyss_exports import export_research
+            exported = export_research(output, args.export)
+        else:
+            exported = []
         print(json.dumps({"output": str(output.resolve()), "sources": len(items), "planned_queries": len(plan),
-                          "executed_queries": len(events), "errors": sum(e["status"] == "error" for e in events)}, ensure_ascii=False))
+                          "executed_queries": len(events), "errors": sum(e["status"] == "error" for e in events),
+                          "exports": [str(f.resolve()) for f in exported]}, ensure_ascii=False))
         return 2 if any(e["status"] == "error" for e in events) else 0
     except (ValueError, OSError) as exc:
         print(f"Erro local: {type(exc).__name__}. Confira arquivos e parâmetros.", file=sys.stderr)
