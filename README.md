@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/abyss-logo.png" alt="ABYSS — OSINT Intelligence System — Inteligência além da superfície" width="520">
+</p>
+
 # ABYSS
 
 **Inteligência além da superfície.**
