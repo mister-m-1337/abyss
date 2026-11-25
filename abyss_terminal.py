@@ -1,5 +1,6 @@
 """Menu textual portátil: entrada padrão, saída padrão e nenhuma dependência."""
 import contextlib
+import getpass
 import io
 import json
 import os
@@ -122,11 +123,16 @@ def new_search(run):
                         ("--alias", "Nomes alternativos, separados por vírgula (opcional)")]:
         args.extend(part for value in ask(label).split(",") if value.strip() for part in [flag, value.strip()])
     say("[1] Brave API  [2] SearXNG  [3] Plano manual/importação  [4] Ambos")
-    provider = {1: "brave", 2: "searxng", 3: "manual", 4: "both"}[number("Provedor", 3, 1, 4)]
+    from abyss_config import read_config
+    preferred = {"brave": 1, "searxng": 2, "manual": 3}.get(read_config().get("provider"), 3)
+    provider = {1: "brave", 2: "searxng", 3: "manual", 4: "both"}[number("Provedor", preferred, 1, 4)]
     args += ["--provider", provider]
     if provider in {"brave", "both"} and not os.environ.get("BRAVE_API_KEY"):
-        say("BRAVE_API_KEY não está configurada. Defina a chave no ambiente e tente novamente.")
-        return
+        key = getpass.getpass("Chave Brave (somente nesta sessão; vazio cancela): ").strip()
+        if not key:
+            say("Chave não informada; escolha outro provedor ou configure depois.")
+            return
+        os.environ["BRAVE_API_KEY"] = key
     if provider in {"searxng", "both"}:
         endpoint = ask("URL da instância SearXNG", os.environ.get("SEARXNG_URL", "http://localhost:8080"))
         args += ["--searxng-url", endpoint]
@@ -192,7 +198,7 @@ def run_terminal(run, version, initial=None):
                 say(f"Não foi possível abrir a pesquisa ({type(exc).__name__}).")
                 return 2
         while True:
-            say("[1] Nova pesquisa  [2] Abrir pesquisa salva  [3] Retomar pesquisa  [4] Atualizações  [0] Sair")
+            say("[1] Nova pesquisa  [2] Abrir pesquisa salva  [3] Retomar pesquisa  [4] Atualizações  [5] Configurar buscador  [0] Sair")
             choice = ask("Escolha")
             if choice == "0":
                 return 0
@@ -214,6 +220,9 @@ def run_terminal(run, version, initial=None):
                         say("Não foi possível retomar; confira a pesquisa e a configuração do provedor.")
                 elif choice == "4":
                     updates_menu(version)
+                elif choice == "5":
+                    from abyss_config import configure
+                    configure()
             except (OSError, ValueError) as exc:
                 say(f"Não foi possível abrir a pesquisa ({type(exc).__name__}).")
     except (EOFError, KeyboardInterrupt):

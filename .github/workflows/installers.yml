@@ -1,0 +1,73 @@
+name: Build installers
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (must already exist, e.g. v0.4.0)'
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            name: ABYSS-Setup-windows-x64
+            extension: .exe
+          - os: macos-15
+            name: ABYSS-Setup-macos-arm64
+            extension: ''
+          - os: macos-15-intel
+            name: ABYSS-Setup-macos-x64
+            extension: ''
+          - os: ubuntu-24.04
+            name: ABYSS-Setup-linux-x64
+            extension: ''
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONUTF8: '1'
+      ABYSS_NO_UPDATE_CHECK: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install pyinstaller==6.22.3 certifi==2026.11.20
+      - run: python -m unittest discover -s tests -v
+      - run: python packaging/build.py --name "${{ matrix.name }}"
+      - name: Smoke test packaged installer and application
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,subprocess,tempfile
+          from pathlib import Path
+          binary=Path('dist')/os.environ['ASSET']
+          installed_version=subprocess.check_output([str(binary.resolve()),'--version'],text=True).strip()
+          assert installed_version == os.environ['RELEASE_TAG'].lstrip('v')
+          with tempfile.TemporaryDirectory() as tmp:
+              target=Path(tmp)/'ABYSS install'
+              subprocess.run([str(binary.resolve()),'--install','--install-dir',str(target)],check=True,timeout=90)
+              state=json.loads((target/'installation.json').read_text())
+              app=target/state['executable']
+              subprocess.run([str(app),'--company','Empresa teste','--output',str(target/'output'/'smoke'),'--export','pdf','xlsx'],check=True,timeout=90)
+              result=json.loads((target/'output'/'smoke'/'research.json').read_text())
+              assert result['target']['company']=='Empresa teste'
+              # Verifica SSL com os certificados distribuídos, sem chave de API.
+              subprocess.run([str(app),'--check-update'],check=True,timeout=30)
+          (binary.parent/(binary.name+'.sha256')).write_text(hashlib.sha256(binary.read_bytes()).hexdigest()+'  '+binary.name+'\n')
+          PY
+        env:
+          ASSET: ${{ matrix.name }}${{ matrix.extension }}
+          RELEASE_TAG: ${{ inputs.tag }}
+      - name: Attach installer to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          ASSET: ${{ matrix.name }}${{ matrix.extension }}
+        run: gh release upload "$RELEASE_TAG" "dist/$ASSET" "dist/$ASSET.sha256" --clobber

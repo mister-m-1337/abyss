@@ -11,10 +11,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
-from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.request import Request, build_opener, HTTPRedirectHandler, HTTPSHandler
 from abyss_discovery import build_plan, assess_sources
+from abyss_network import tls_context
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -67,7 +68,7 @@ class NoRedirect(HTTPRedirectHandler):
 
 def fetch_json(url, headers=None, timeout=25):
     request = Request(url, headers={"User-Agent": f"ABYSS/{VERSION}", "Accept": "application/json", **(headers or {})})
-    with build_opener(NoRedirect()).open(request, timeout=timeout) as response:
+    with build_opener(NoRedirect(), HTTPSHandler(context=tls_context())).open(request, timeout=timeout) as response:
         raw = response.read(4_000_001)
     if len(raw) > 4_000_000:
         raise ValueError("Resposta excede limite de 4 MB")
@@ -197,10 +198,16 @@ def save(output, target, plan, items, events, mode, existing=False):
 
 
 def main(argv=None):
+    from abyss_config import load_environment
+    load_environment()
     parser = argparse.ArgumentParser(description="ABYSS — inteligência de fontes abertas, somente leitura")
     parser.add_argument("--version", action="version", version=VERSION)
     parser.add_argument("--check-update", action="store_true", help="Consultar a release estável mais recente")
     parser.add_argument("--update", action="store_true", help="Atualizar instalação Git pela release oficial")
+    parser.add_argument("--install", action="store_true", help="Instalar o executável no perfil do usuário")
+    parser.add_argument("--install-dir", type=Path, help="Pasta da instalação por usuário")
+    parser.add_argument("--desktop-shortcut", action="store_true")
+    parser.add_argument("--configure", action="store_true", help="Configurar o buscador nesta sessão")
     parser.add_argument("--company")
     parser.add_argument("--ui", action="store_true", help="Abrir interface interativa no terminal")
     parser.add_argument("--open", type=Path, help="Abrir uma pesquisa salva (pasta ou research.json)")
@@ -226,6 +233,20 @@ def main(argv=None):
     parser.add_argument("--output", type=Path)
     arguments = sys.argv[1:] if argv is None else argv
     args = parser.parse_args(arguments)
+    if args.install or args.configure:
+        try:
+            if args.install:
+                from abyss_installer import setup
+                return setup(VERSION, args.install_dir, desktop=args.desktop_shortcut, run=main)
+            from abyss_config import configure
+            configure()
+            if args.ui:
+                from abyss_terminal import run_terminal
+                return run_terminal(main, VERSION)
+            return 0
+        except (OSError, ValueError, EOFError, KeyboardInterrupt) as exc:
+            print(str(exc) if isinstance(exc, ValueError) else "Instalação/configuração não concluída; confira o acesso à pasta.", file=sys.stderr)
+            return 2
     if args.check_update or args.update:
         from abyss_updates import check_update, apply_update
         try:
@@ -336,4 +357,12 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
+    if getattr(sys, "frozen", False) and len(sys.argv) == 1:
+        from abyss_installer import installed_root, setup
+        if not installed_root():
+            try:
+                sys.exit(setup(VERSION, guided=True, run=main))
+            except (ValueError, OSError, EOFError, KeyboardInterrupt) as exc:
+                print(str(exc) if isinstance(exc, ValueError) else "Instalação interrompida.", file=sys.stderr)
+                sys.exit(2)
     sys.exit(main())

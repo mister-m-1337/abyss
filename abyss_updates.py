@@ -3,9 +3,11 @@ import json
 import os
 import re
 import subprocess
+import sys
 import time
 from pathlib import Path
 from urllib.request import Request, urlopen
+from abyss_network import tls_context
 
 REPOSITORY = "mister-m-1337/abyss"
 API = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
@@ -35,7 +37,7 @@ def check_update(current, force=False, cache=None):
             pass
     if release is None:
         req = Request(API, headers={"Accept": "application/vnd.github+json", "User-Agent": "ABYSS-Update-Checker"})
-        with urlopen(req, timeout=3) as response:
+        with urlopen(req, timeout=3, context=tls_context()) as response:
             raw = response.read(1_000_001)
         if len(raw) > 1_000_000:
             raise ValueError("Resposta de release excede o limite permitido")
@@ -74,6 +76,9 @@ def git(repo, *args, timeout=60):
 
 
 def apply_update(current, repo=None):
+    if getattr(sys, "frozen", False) and repo is None:
+        from abyss_installer import update_binary
+        return update_binary(current)
     repo = Path(repo) if repo else Path(__file__).resolve().parent
     latest = check_update(current, force=True)
     if not latest["update_available"]:

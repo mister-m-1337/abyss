@@ -10,7 +10,10 @@ Ferramenta Python de OSINT comercial da Polypus IT Solutions. Organiza buscas so
 
 **[Tutorial completo de instalação, configuração e atualização](docs/INSTALACAO.md)** — Windows, macOS e Linux.
 
-## Versão 0.3.0
+## Versão 0.4.0
+
+- **Instalador único por plataforma**, com Python e certificados incluídos, instalação por usuário e lançador. Não exige Python/Git separados.
+- Configuração guiada do buscador, com chave Brave somente na sessão; atualização do executável por pacote oficial e SHA-256.
 
 - Plano de pesquisa em nove dimensões: institucional, decisores, compras, tecnologia, projetos, pessoas, vagas, documentos e notícias.
 - Localidade, aliases e múltiplos domínios oficiais informados pelo operador.
@@ -29,7 +32,13 @@ Ferramenta Python de OSINT comercial da Polypus IT Solutions. Organiza buscas so
 
 Esta versão coleta resultados e trechos dos buscadores; **não faz leitura integral automática das páginas ou PDFs de origem, nem confirma cargos atuais**. Não extrai contatos de áreas autenticadas, não infere e-mails e não verifica autoridade de contratação. Referências importadas continuam identificadas como importação. Não depende de IA e não promete cobertura exaustiva.
 
-## Executar sem instalação
+## Instalar com um arquivo
+
+Baixe o instalador para [Windows, macOS ou Linux na última release](https://github.com/mister-m-1337/abyss/releases/latest). O pacote inclui o programa e seu runtime; a chave Brave ou instância SearXNG deve ser fornecida pelo usuário. Veja o [passo a passo](docs/INSTALACAO.md#instalador-único--sem-python-ou-git-separados).
+
+Executáveis ainda sem assinatura digital; o sistema operacional pode pedir autorização para abertura. Pacotes e certificados são gerados e testados pelo [workflow de instaladores](.github/workflows/installers.yml).
+
+## Executar pelo código-fonte
 
 Requer Python 3.10 ou superior. Usa somente a biblioteca padrão.
 
@@ -110,7 +119,7 @@ python3 abyss.py --check-update
 python3 abyss.py --update
 ```
 
-O menu avisa sobre releases novas (cache de 24h) e oferece atualização na opção 4. O atualizador usa a tag estável oficial, requer clone Git na branch `main`, verifica a origem e bloqueia código alterado ou histórico divergente. Pesquisas em `output/` são preservadas. Reabra o programa após atualizar. Instalações ZIP precisam migrar para clone Git; consulte o tutorial. Defina `ABYSS_NO_UPDATE_CHECK=1` para desativar a checagem automática.
+O menu avisa sobre releases novas (cache de 24h) e oferece atualização na opção 4. Instalações por executável baixam o pacote oficial de sua plataforma, verificam SHA-256 e mantêm versões anteriores. Instalações pelo código-fonte usam a tag estável oficial via Git na branch `main`, bloqueando alterações locais e histórico divergente. Pesquisas em `output/` são preservadas. Reabra pelo lançador após atualizar. Instalações de código-fonte por ZIP precisam migrar para clone Git ou instalador; consulte o tutorial. Defina `ABYSS_NO_UPDATE_CHECK=1` para desativar a checagem automática.
 
 ## Evidências e limites
 
@@ -130,7 +139,7 @@ Testes de provedores usam respostas simuladas. Uma execução manual demonstra e
 
 ## Desenvolvimento previsto
 
-Leitura de páginas públicas e PDFs, rastreamento limitado a domínios selecionados, coleta de canais institucionais publicados, correlação de entidades, revisão de conflitos entre fontes e monitoramento periódico. Esses recursos ainda não estão implementados na versão 0.3.0.
+Leitura de páginas públicas e PDFs, rastreamento limitado a domínios selecionados, coleta de canais institucionais publicados, correlação de entidades, revisão de conflitos entre fontes e monitoramento periódico. Esses recursos ainda não estão implementados na versão 0.4.0.
 
 ## Uso e contribuições
 

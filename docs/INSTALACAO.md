@@ -1,6 +1,67 @@
 # Instalar e atualizar o ABYSS
 
-O ABYSS funciona no Windows, macOS e Linux com **Python 3.10 ou superior e Git**. Não precisa de `pip install`, banco de dados, Docker ou bibliotecas externas. Brave e SearXNG são alternativas para realizar buscas automáticas, não requisitos para abrir o programa ou analisar arquivos já salvos.
+Há duas formas de instalar: **instalador único recomendado**, com Python e certificados incluídos, ou instalação pelo código-fonte, com Python/Git separados. Brave e SearXNG são alternativas para realizar buscas automáticas, não requisitos para abrir o programa ou analisar pesquisas já salvas.
+
+## Instalador único — sem Python ou Git separados
+
+Baixe apenas o arquivo correspondente ao seu computador na [release mais recente](https://github.com/mister-m-1337/abyss/releases/latest):
+
+| Sistema | Arquivo |
+|---|---|
+| Windows 10/11 x64 | [ABYSS-Setup-windows-x64.exe](https://github.com/mister-m-1337/abyss/releases/latest/download/ABYSS-Setup-windows-x64.exe) |
+| macOS Apple Silicon (M1 ou superior) | [ABYSS-Setup-macos-arm64](https://github.com/mister-m-1337/abyss/releases/latest/download/ABYSS-Setup-macos-arm64) |
+| macOS Intel | [ABYSS-Setup-macos-x64](https://github.com/mister-m-1337/abyss/releases/latest/download/ABYSS-Setup-macos-x64) |
+| Linux x64 (Ubuntu 24.04 ou compatível) | [ABYSS-Setup-linux-x64](https://github.com/mister-m-1337/abyss/releases/latest/download/ABYSS-Setup-linux-x64) |
+
+Os pacotes macOS são construídos e testados em macOS 15; Linux em Ubuntu 24.04 x64. Outras arquiteturas, incluindo Windows ARM e Linux ARM, ainda não têm pacote oficial.
+
+**Windows:** abra o `.exe` e siga as instruções no terminal. Também é possível iniciar pelo PowerShell:
+
+```powershell
+.\ABYSS-Setup-windows-x64.exe
+```
+
+**macOS:** abra o Terminal na pasta de download. Para Apple Silicon:
+
+```bash
+chmod +x ABYSS-Setup-macos-arm64
+./ABYSS-Setup-macos-arm64
+```
+
+Em Mac Intel, substitua `arm64` por `x64`. **Linux:**
+
+```bash
+chmod +x ABYSS-Setup-linux-x64
+./ABYSS-Setup-linux-x64
+```
+
+O instalador oferece uma pasta por usuário e um lançador, com opção de cópia para a Área de Trabalho quando essa pasta existir. Não exige administrador e não altera o Python global. No Linux, o lançador é um script `.sh`; execute-o pelo terminal. No macOS é `.command`; no Windows, `.cmd`.
+
+Pastas padrão:
+
+- Windows: `%LOCALAPPDATA%\ABYSS`.
+- macOS: `~/Library/Application Support/ABYSS`.
+- Linux: `~/.local/share/abyss`, respeitando `XDG_DATA_HOME` quando informado.
+
+A instalação mantém versões em `versions/`, pesquisas em `output/` e preferências sem credenciais em `config.json`. A chave Brave não é salva: se necessário, ela será solicitada sem eco na sessão. O menu **5 — Configurar buscador** permite escolher Brave, SearXNG existente ou modo manual.
+
+O pacote contém o runtime Python, certificados TLS, código, menu e exportadores. **Não inclui assinatura/chave Brave nem instala um servidor SearXNG.** É preciso fornecer uma chave própria ou o endereço de uma instância existente para busca automática. O SearXNG deve aceitar JSON.
+
+Os executáveis ainda não têm assinatura Authenticode/Apple Developer. Windows/macOS podem apresentar avisos de segurança. Verifique que o arquivo veio deste repositório e, se decidir abri-lo, use a autorização específica disponibilizada pelo sistema; o ABYSS não desativa proteções. Cada executável tem um arquivo `.sha256` na release para conferência de integridade.
+
+No instalador, a opção **4 — Atualizações** baixa o executável oficial da nova release, verifica seu SHA-256 e instala em outra pasta de versão. O lançador passa a apontar para ela; as pesquisas e versões anteriores permanecem. Reabra pelo lançador após atualizar. Não é necessário Git para esse fluxo.
+
+Instalação não interativa, útil para administradores/testes:
+
+```bash
+./ABYSS-Setup-linux-x64 --install --install-dir "$HOME/ABYSS"
+```
+
+Use o nome do executável correspondente ao seu sistema. A opção `--desktop-shortcut` também cria uma cópia do lançador na Área de Trabalho, se disponível.
+
+## Instalação pelo código-fonte
+
+Nesta alternativa são necessários **Python 3.10 ou superior e Git**. As instruções abaixo mantêm o programa sem dependências Python adicionais.
 
 ## 1. Instalar os requisitos
 
@@ -68,6 +129,7 @@ O menu permite:
 2. Abrir resultados salvos, filtrar, ver detalhes e exportar PDF/Excel.
 3. Retomar uma pesquisa anterior ou interrompida.
 4. Consultar e instalar novas releases.
+5. Configurar o buscador sem gravar chaves em arquivos.
 
 Sem provedor configurado, escolha **Plano manual/importação**. Esse modo gera consultas para pesquisa e aceita referências JSON; não executa buscas na internet sozinho.
 
@@ -167,13 +229,15 @@ No Windows, use `py -3`. A atualização busca a **tag da release estável**, e 
 
 Se você ainda usa a versão 0.1 ou 0.2, faça `git pull --ff-only` uma vez para obter a versão que inclui o atualizador. O Git recusará o avanço se o histórico estiver divergente; preserve mudanças locais antes de prosseguir.
 
-O atualizador exige:
+Na instalação pelo código-fonte, o atualizador exige:
 
 - Instalação via Git, na branch `main`, com `origin` apontando para `mister-m-1337/abyss`.
 - Ausência de mudanças locais e arquivos não versionados fora das pastas ignoradas.
 - Histórico compatível com avanço por `fast-forward`.
 
 Ele não executa `reset --hard`, não limpa arquivos e não força a troca de branch. Arquivos em `output/` são preservados. Depois de atualizar, encerre e reabra o programa.
+
+Na instalação por executável, o mesmo menu usa os pacotes publicados na release com conferência SHA-256, sem Git. Uma release sem pacote da sua plataforma não pode ser instalada por esse fluxo.
 
 Para desativar apenas a verificação automática, defina `ABYSS_NO_UPDATE_CHECK=1` no ambiente. A opção 4 e `--check-update` continuam disponíveis. A verificação consulta apenas o GitHub; nenhuma informação do alvo é enviada nesse processo.
 
