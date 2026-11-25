@@ -13,7 +13,7 @@ class ResearchTests(unittest.TestCase):
     def test_scope_and_corporate_purchasing(self):
         plan = abyss.make_plan("Empresa", "Anápolis", ["example.com"])
         self.assertEqual(len({q["category"] for q in plan[:9]}), 9)
-        self.assertTrue(any('"Empresa" compras MRO' == q["query"][:len('"Empresa" compras MRO')] for q in plan))
+        self.assertTrue(any(q["category"] == "compras" and q["scope"] == "corporativo" and "Anápolis" not in q["query"] for q in plan))
         self.assertTrue(any(q["query"].startswith("site:example.com") for q in plan))
 
     def test_dedup_preserves_different_evidence(self):

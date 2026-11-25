@@ -8,18 +8,24 @@
 
 Ferramenta Python de OSINT comercial da Polypus IT Solutions. Organiza buscas sobre empresas e unidades, preserva fontes e exporta evidências para revisão humana. Não envia mensagens, propostas, candidaturas ou formulários.
 
-## Versão 0.2.0
+**[Tutorial completo de instalação, configuração e atualização](docs/INSTALACAO.md)** — Windows, macOS e Linux.
+
+## Versão 0.3.0
 
 - Plano de pesquisa em nove dimensões: institucional, decisores, compras, tecnologia, projetos, pessoas, vagas, documentos e notícias.
 - Localidade, aliases e múltiplos domínios oficiais informados pelo operador.
-- Buscas corporativas adicionais sem filtro local para encontrar compradores centralizados.
-- Adaptadores Brave Search API e SearXNG, com limite explícito de consultas e intervalo entre elas.
+- Consultas focadas com alternativas `OR`, variações locais/corporativas e modo profundo com termos internacionais.
+- Pesquisa por profissionais conhecidos, temas personalizados, arquivos de consultas e exclusão de domínios.
+- Brave Search API, SearXNG e modo combinado, paginação e filtro temporal com orçamento total de chamadas.
 - Modo manual sem rede e importação de referências JSON.
 - Deduplicação por URL mantendo diferentes trechos e consultas de origem.
 - JSON, CSV, relatório TXT, links de pesquisa e hashes SHA-256 dos arquivos exportados.
-- Falhas de provedores registradas; interrompe o lote quando ocorre erro, preservando resultados anteriores.
+- Falhas registradas por provedor; preserva respostas parciais e continua com o outro provedor quando configurado.
+- Checkpoint após cada chamada e retomada sem repetir páginas concluídas para o mesmo provedor/período.
+- Sinais explicáveis de relação com o alvo para triagem, sem tratar coincidências de nome como vínculo confirmado.
 - Interface leve no terminal: nova pesquisa, abrir pesquisa salva, paginação, filtros, detalhes e auditoria de consultas.
 - Exportação PDF paginada e Excel `.xlsx` com abas Resumo, Fontes, Consultas e Plano.
+- Aviso de novas releases estáveis e atualização pelo menu ou `--update`, preservando pesquisas e bloqueando mudanças locais.
 
 Esta versão coleta resultados e trechos dos buscadores; **não faz leitura integral automática das páginas ou PDFs de origem, nem confirma cargos atuais**. Não extrai contatos de áreas autenticadas, não infere e-mails e não verifica autoridade de contratação. Referências importadas continuam identificadas como importação. Não depende de IA e não promete cobertura exaustiva.
 
@@ -40,6 +46,8 @@ python3 abyss.py --company "Empresa Exemplo" --location "Anápolis GO" --domain 
 ```
 
 O modo padrão é `manual`: cria o plano e links de pesquisa, sem consultas de rede. A saída vai para uma pasta nova em `output/`. Pastas existentes não são sobrescritas.
+
+Para receber atualizações pelo programa, instale com `git clone https://github.com/mister-m-1337/abyss.git` e execute dentro da pasta `abyss`. O [tutorial](docs/INSTALACAO.md) explica os requisitos e comandos de cada sistema operacional.
 
 ```bash
 python3 abyss.py --company "Empresa Exemplo" --domain example.com \
@@ -78,6 +86,32 @@ python3 abyss.py --company "Empresa Exemplo" --provider searxng \
 
 A busca usa requisições GET aos provedores configurados. O nome do alvo e os termos são enviados ao buscador, como em qualquer pesquisa; não são enviados ao alvo por mensagens ou formulários. Não há módulo de outreach, cadastro ou interação autenticada.
 
+## Busca avançada e retomada
+
+```bash
+python3 abyss.py --company "Empresa Exemplo" --location "Anápolis GO" \
+  --domain example.com --depth deep --person "Nome conhecido" \
+  --keyword WinCC --provider brave --pages 3 --max-queries 20 \
+  --max-requests 30 --freshness year --export pdf xlsx
+```
+
+O orçamento considera páginas e provedores; `--max-requests` limita chamadas novas. `--provider both` combina Brave/SearXNG se ambos estiverem configurados. Filtros temporais dependem da interpretação do buscador e não confirmam atualidade dos fatos.
+
+```bash
+python3 abyss.py --resume output/SUA-PESQUISA/checkpoint.json --max-queries 50
+```
+
+A retomada mantém o plano original, grava outra pasta e evita repetir páginas com sucesso no mesmo provedor/período. A credencial e o endereço SearXNG devem estar configurados novamente. Veja opções adicionais no [tutorial](docs/INSTALACAO.md).
+
+## Atualizações
+
+```bash
+python3 abyss.py --check-update
+python3 abyss.py --update
+```
+
+O menu avisa sobre releases novas (cache de 24h) e oferece atualização na opção 4. O atualizador usa a tag estável oficial, requer clone Git na branch `main`, verifica a origem e bloqueia código alterado ou histórico divergente. Pesquisas em `output/` são preservadas. Reabra o programa após atualizar. Instalações ZIP precisam migrar para clone Git; consulte o tutorial. Defina `ABYSS_NO_UPDATE_CHECK=1` para desativar a checagem automática.
+
 ## Evidências e limites
 
 `research.json` preserva consulta, provedor, horário de coleta, data de publicação informada pelo provedor, trecho e tipo de fonte. O horário de coleta não é a data do evento. Classificar um domínio como oficial depende da configuração do operador e não valida automaticamente sua propriedade.
@@ -96,7 +130,7 @@ Testes de provedores usam respostas simuladas. Uma execução manual demonstra e
 
 ## Desenvolvimento previsto
 
-Leitura de páginas públicas e PDFs, rastreamento limitado a domínios selecionados, coleta de canais institucionais publicados, correlação de entidades, revisão de conflitos entre fontes e monitoramento incremental. Esses recursos ainda não estão implementados na versão 0.2.0.
+Leitura de páginas públicas e PDFs, rastreamento limitado a domínios selecionados, coleta de canais institucionais publicados, correlação de entidades, revisão de conflitos entre fontes e monitoramento periódico. Esses recursos ainda não estão implementados na versão 0.3.0.
 
 ## Uso e contribuições
 

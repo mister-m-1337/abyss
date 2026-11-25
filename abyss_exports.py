@@ -26,7 +26,7 @@ def load_research(path):
     if not isinstance(data.get("sources"), list) or not isinstance(data.get("queries"), list) or not isinstance(data.get("plan"), list):
         raise ValueError("Estrutura de pesquisa inválida")
     for source in data["sources"]:
-        if not isinstance(source, dict) or not isinstance(source.get("evidence"), list) or not isinstance(source.get("url"), str):
+        if not isinstance(source, dict) or not isinstance(source.get("id"), str) or not isinstance(source.get("evidence"), list) or not isinstance(source.get("url"), str):
             raise ValueError("Fonte inválida no arquivo de pesquisa")
         if any(not isinstance(e, dict) for e in source["evidence"]):
             raise ValueError("Evidência inválida no arquivo de pesquisa")
@@ -39,9 +39,9 @@ def evidence_rows(data):
     for source in data["sources"]:
         for e in source["evidence"]:
             yield [source.get("id", ""), source["url"], source.get("source_kind", ""),
-                   e.get("category", ""), e.get("title", ""), e.get("snippet", ""),
+                   e.get("category", ""), e.get("title", ""), "\n\n".join([e.get("snippet", ""), *e.get("extra_snippets", [])]),
                    e.get("published_date_reported", ""), e.get("collected_at", ""),
-                   e.get("query", ""), e.get("provider", ""), e.get("evidence_type", ""), e.get("status", "")]
+                   e.get("query", ""), e.get("provider", ""), e.get("evidence_type", ""), e.get("status", ""), json.dumps(source.get("target_signals", {}), ensure_ascii=False)]
 
 
 def workbook_tables(data):
@@ -54,15 +54,15 @@ def workbook_tables(data):
         ["Modo", data.get("mode", "")],
         ["Fontes únicas", len(data["sources"])],
         ["Consultas planejadas", len(data["plan"])],
-        ["Consultas executadas", len(data["queries"])],
+        ["Requisições registradas (páginas/provedores)", len(data["queries"])],
         ["Falhas", errors],
         ["Validação", "Trechos de busca/importações; cargos, datas e autoridade exigem confirmação na fonte."],
         ["Contato com alvo", "Nenhuma mensagem, proposta ou cadastro enviado."],
         ["Excel", "Texto longo pode ser truncado em 32.767 caracteres por célula. Conteúdo integral no JSON original."],
     ]
-    sources = [["ID", "URL", "Tipo de fonte", "Categoria", "Título", "Evidência", "Publicação informada", "Coleta UTC", "Consulta", "Provedor", "Tipo de evidência", "Status"], *evidence_rows(data)]
-    queries = [["Categoria", "Consulta", "Status", "Resultados", "Ignorados", "Erro", "Coleta UTC"]]
-    queries.extend([[q.get(k, "") for k in ("category", "query", "status", "returned", "skipped", "error", "at")] for q in data["queries"]])
+    sources = [["ID", "URL", "Tipo de fonte", "Categoria", "Título", "Evidência", "Publicação informada", "Coleta UTC", "Consulta", "Provedor", "Tipo de evidência", "Status", "Sinais para triagem (revisão obrigatória)"], *evidence_rows(data)]
+    queries = [["Categoria", "Consulta", "Status", "Resultados", "Ignorados", "Erro", "Coleta UTC", "Provedor", "Página", "Período", "Avisos"]]
+    queries.extend([[q.get(k, "") for k in ("category", "query", "status", "returned", "skipped", "error", "at", "provider", "page", "freshness")] + ["; ".join(q.get("warnings", []))] for q in data["queries"]])
     plan = [["Categoria", "Consulta"], *[[q.get("category", ""), q.get("query", "")] for q in data["plan"]]]
     return [("Resumo", summary), ("Fontes", sources), ("Consultas", queries), ("Plano", plan)]
 
@@ -143,7 +143,7 @@ def report_lines(data):
     yield f"Localidade: {target.get('location', '')}"
     yield f"Pesquisa coletada em UTC: {data.get('created_at', '')}"
     yield f"Modo: {data.get('mode', '')} | Fontes únicas: {len(data['sources'])}"
-    yield f"Consultas: {len(data['queries'])} executadas / {len(data['plan'])} planejadas"
+    yield f"Requisições registradas: {len(data['queries'])} | Consultas planejadas: {len(data['plan'])}"
     yield ""
     yield "Trechos de buscadores e referências importadas exigem validação na fonte original."
     yield "Não confirmam cargo atual, poder de contratação ou demanda comercial."
@@ -158,6 +158,8 @@ def report_lines(data):
         for e in source["evidence"]:
             yield f"Categoria: {e.get('category', '')} | {e.get('title', '')}"
             yield f"Evidência: {e.get('snippet', '')}"
+            for snippet in e.get("extra_snippets", []):
+                yield f"Trecho adicional: {snippet}"
             yield f"Publicação informada: {e.get('published_date_reported') or 'não informada'}"
             yield f"Coleta UTC: {e.get('collected_at', '')}"
             yield f"Consulta: {e.get('query', '')}"
@@ -166,9 +168,11 @@ def report_lines(data):
         yield ""
     yield "CONSULTAS EXECUTADAS"
     for q in data["queries"]:
-        yield f"[{q.get('status', '')}] {q.get('query', '')}"
+        yield f"[{q.get('status', '')}] [{q.get('provider', '')} p{q.get('page', 1)}] {q.get('query', '')}"
         if q.get("error"):
             yield f"Erro: {q['error']}"
+        for warning in q.get("warnings", []):
+            yield f"Aviso de cobertura: {warning}"
     yield ""
     yield "PLANO DE BUSCAS"
     for q in data["plan"]:
