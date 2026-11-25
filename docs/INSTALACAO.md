@@ -13,7 +13,7 @@ Baixe apenas o arquivo correspondente ao seu computador na [release mais recente
 | macOS Intel | [ABYSS-Setup-macos-x64](https://github.com/mister-m-1337/abyss/releases/latest/download/ABYSS-Setup-macos-x64) |
 | Linux x64 (Ubuntu 24.04 ou compatível) | [ABYSS-Setup-linux-x64](https://github.com/mister-m-1337/abyss/releases/latest/download/ABYSS-Setup-linux-x64) |
 
-Os pacotes são construídos e testados em macOS 26 (Apple Silicon), macOS 15 (Intel) e Ubuntu 24.04 x64 (Linux). Outras arquiteturas, incluindo Windows ARM e Linux ARM, ainda não têm pacote oficial.
+Nesta distribuição, o pacote Apple Silicon foi construído e testado em macOS 27.0.1 com Python 3.12.15 incluído; Windows x64, macOS Intel e Linux x64 foram construídos com Python 3.13 e testados nos respectivos runners (Windows Server 2022, macOS 15 e Ubuntu 24.04). O workflow também está preparado para gerar Apple Silicon em macOS 26. Outras arquiteturas, incluindo Windows ARM e Linux ARM, ainda não têm pacote oficial.
 
 **Windows:** abra o `.exe` e siga as instruções no terminal. Também é possível iniciar pelo PowerShell:
 

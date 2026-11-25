@@ -2,6 +2,8 @@
 
 O usuário final não precisa deste procedimento. O workflow constrói um executável por plataforma com Python 3.13, PyInstaller e certificados certifi fixados nas versões do workflow. Licenças de Python, certificados, ferramenta de empacotamento e ABYSS são incluídas. A licença proprietária do ABYSS não elimina direitos sobre componentes de terceiros.
 
+Na primeira distribuição v0.4.1, a fila de runners Apple Silicon foi substituída por build local isolado em macOS 27.0.1/Python 3.12.15, com os mesmos pins de PyInstaller/certifi e verificação nativa de instalação, exportações e HTTPS. Os demais pacotes foram gerados no workflow. Nenhum Python global foi alterado. A seleção de plataforma do workflow permite refazer apenas o pacote necessário enquanto a release ainda é draft.
+
 Para publicar uma versão:
 
 1. Atualize `VERSION` e a documentação, execute os testes, faça commit e push.
