@@ -13,7 +13,7 @@ Baixe apenas o arquivo correspondente ao seu computador na [release mais recente
 | macOS Intel | [ABYSS-Setup-macos-x64](https://github.com/mister-m-1337/abyss/releases/latest/download/ABYSS-Setup-macos-x64) |
 | Linux x64 (Ubuntu 24.04 ou compatível) | [ABYSS-Setup-linux-x64](https://github.com/mister-m-1337/abyss/releases/latest/download/ABYSS-Setup-linux-x64) |
 
-Os pacotes macOS são construídos e testados em macOS 15; Linux em Ubuntu 24.04 x64. Outras arquiteturas, incluindo Windows ARM e Linux ARM, ainda não têm pacote oficial.
+Os pacotes são construídos e testados em macOS 26 (Apple Silicon), macOS 15 (Intel) e Ubuntu 24.04 x64 (Linux). Outras arquiteturas, incluindo Windows ARM e Linux ARM, ainda não têm pacote oficial.
 
 **Windows:** abra o `.exe` e siga as instruções no terminal. Também é possível iniciar pelo PowerShell:
 

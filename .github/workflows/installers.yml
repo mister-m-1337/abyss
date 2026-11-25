@@ -17,7 +17,7 @@ jobs:
           - os: windows-2022
             name: ABYSS-Setup-windows-x64
             extension: .exe
-          - os: macos-15
+          - os: macos-26
             name: ABYSS-Setup-macos-arm64
             extension: ''
           - os: macos-15-intel
