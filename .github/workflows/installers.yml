@@ -6,6 +6,12 @@ on:
         description: 'Release tag (must already exist, e.g. v0.4.0)'
         required: true
         type: string
+      platform:
+        description: 'Package selection'
+        required: true
+        default: all
+        type: choice
+        options: [all, linux, windows, macos-intel, macos-arm64]
 permissions:
   contents: write
 jobs:
@@ -13,19 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-2022
-            name: ABYSS-Setup-windows-x64
-            extension: .exe
-          - os: macos-26
-            name: ABYSS-Setup-macos-arm64
-            extension: ''
-          - os: macos-15-intel
-            name: ABYSS-Setup-macos-x64
-            extension: ''
-          - os: ubuntu-24.04
-            name: ABYSS-Setup-linux-x64
-            extension: ''
+        include: ${{ fromJSON(inputs.platform == 'linux' && '[{"os":"ubuntu-24.04","name":"ABYSS-Setup-linux-x64","extension":""}]' || inputs.platform == 'windows' && '[{"os":"windows-2022","name":"ABYSS-Setup-windows-x64","extension":".exe"}]' || inputs.platform == 'macos-intel' && '[{"os":"macos-15-intel","name":"ABYSS-Setup-macos-x64","extension":""}]' || inputs.platform == 'macos-arm64' && '[{"os":"macos-26","name":"ABYSS-Setup-macos-arm64","extension":""}]' || '[{"os":"windows-2022","name":"ABYSS-Setup-windows-x64","extension":".exe"},{"os":"macos-26","name":"ABYSS-Setup-macos-arm64","extension":""},{"os":"macos-15-intel","name":"ABYSS-Setup-macos-x64","extension":""},{"os":"ubuntu-24.04","name":"ABYSS-Setup-linux-x64","extension":""}]') }}
     runs-on: ${{ matrix.os }}
     env:
       PYTHONUTF8: '1'
@@ -44,7 +38,7 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
-          import hashlib,json,os,subprocess,tempfile
+          import hashlib,json,os,subprocess,tempfile,time
           from pathlib import Path
           binary=Path('dist')/os.environ['ASSET']
           installed_version=subprocess.check_output([str(binary.resolve()),'--version'],text=True).strip()
@@ -58,7 +52,13 @@ jobs:
               result=json.loads((target/'output'/'smoke'/'research.json').read_text())
               assert result['target']['company']=='Empresa teste'
               # Verifica SSL com os certificados distribuídos, sem chave de API.
-              subprocess.run([str(app),'--check-update'],check=True,timeout=30)
+              for attempt in range(3):
+                  checked=subprocess.run([str(app),'--check-update'],timeout=30)
+                  if checked.returncode==0:
+                      break
+                  if attempt==2:
+                      raise RuntimeError('Release API check failed after three attempts')
+                  time.sleep(3)
           (binary.parent/(binary.name+'.sha256')).write_text(hashlib.sha256(binary.read_bytes()).hexdigest()+'  '+binary.name+'\n')
           PY
         env:
